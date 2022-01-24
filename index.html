@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<style>
+table, th, td {
+  border:1px solid black;
+}
+</style>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <div id='app'>
+        <h2 style="text-align: center;">Cryptocurrency table</h2><br><br>
+        <form style='display: flex; align-items: center; justify-content: center'>
+            <div class="form-row">
+              <div class="col" >
+                <input style='width: 300px;' type="text" class="form-control" v-model="searchQuery" placeholder="Search for a coin...">
+              </div>
+            </div>
+          </form><br><br>
+
+        <div>
+            <table class='table'>
+                <thead>
+                <tr>
+                    <th style="text-align: center;" scope="col">#</th>
+                    <th style="text-align: center;" scope='col'>Symbol</th>
+                    <th style="text-align: center;" scope='col'>Average</th>
+                    <th style="text-align: center;" scope='col'></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for='item in resultQuery'>
+                    <td style="text-align: center;">{{item.serial}}</td>
+                    <td style="text-align: center;">{{item.symbol}}</td>
+                    <td style="text-align: center;">{{((item.highest_bid + item.lowest_ask) / 2).toFixed(2)}}</td>
+                    <td style="text-align: center;">
+                        <button v-on:click="addToFav(item)" type="button" class="btn btn-success">Add to Favorites</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div><br>
+
+        <h2 style="text-align: center;">Favorites</h2><br>
+
+        <div>
+            <table class='table'>
+                <thead>
+                <tr>
+                    <th style="text-align: center;" scope='col'>Symbol</th>
+                    <th style="text-align: center;" scope='col'>Average</th>
+                    <th style="text-align: center;" scope='col'></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for='item in Favorites'>
+                    <td style="text-align: center;">{{item.symbol}}</td>
+                    <td style="text-align: center;">{{((item.highest_bid + item.lowest_ask) / 2).toFixed(2)}}</td>
+                    <td style="text-align: center;">
+                        <button v-on:click="removeFromFav(item)" type="button" class="btn btn-danger">Remove from Favorites</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script>
+        let store = new Vue({
+            el:'#app',
+            data:{
+                items: [],
+                searchQuery: '',
+                Favorites: []
+            },
+            created: function(){
+                fetch('http://localhost:3000/').then(
+                    function(res){
+                        res.json().then(
+                            function(json){
+                                for(let i=0; i < json.length; i++){
+                                    if(json[i].symbol.length >= 6){
+                                        json[i].serial = i+1;
+                                        store.items.push(json[i]);
+                                    }
+                                }
+                            }
+                        )
+                    }
+                )
+            },
+            computed:{
+                resultQuery(){
+                    if(this.searchQuery){
+                        return this.items.filter((item)=>{
+                            return this.searchQuery.toLowerCase().split(' ').every(v => item.symbol.toLowerCase().includes(v))})
+                    }else{
+                        return this.items;
+                    }
+                }
+            },
+            methods:{
+                addToFav(coin){
+                    if(!this.Favorites.includes(coin)){
+                        this.Favorites.push(coin);
+                    }   
+                },
+                removeFromFav(coin){
+                    let index = this.Favorites.indexOf(coin);
+                    this.Favorites.splice(index, 1);   
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
